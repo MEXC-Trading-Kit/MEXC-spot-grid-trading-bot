@@ -36,8 +36,8 @@ export function normalizeSymbol(raw: string): string {
 }
 
 export function loadConfig(overrides?: Partial<{ dryRun: boolean }>): AppConfig {
-  const lowerPrice = Number(process.env.GRID_LOWER_PRICE);
-  const upperPrice = Number(process.env.GRID_UPPER_PRICE);
+  const lowerPrice = Number(process.env.GRID_LOWER_PRICE ?? "57500");
+  const upperPrice = Number(process.env.GRID_UPPER_PRICE ?? "69800");
 
   const raw = {
     mexc: {
@@ -47,20 +47,20 @@ export function loadConfig(overrides?: Partial<{ dryRun: boolean }>): AppConfig 
     },
     trading: {
       symbol: normalizeSymbol(process.env.MEXC_SYMBOL ?? "BTCUSDT"),
-      gridMode: (process.env.GRID_MODE ?? "arithmetic") as GridMode,
+      gridMode: (process.env.GRID_MODE ?? "geometric") as GridMode,
       lowerPrice,
       upperPrice,
-      levels: Number(process.env.GRID_LEVELS ?? 10),
-      orderSize: Number(process.env.GRID_ORDER_SIZE ?? 0.001),
+      levels: Number(process.env.GRID_LEVELS ?? 8),
+      orderSize: Number(process.env.GRID_ORDER_SIZE ?? 0.012),
       maxQuoteExposure: process.env.MAX_QUOTE_EXPOSURE
         ? Number(process.env.MAX_QUOTE_EXPOSURE)
-        : undefined,
+        : 6500,
       stopLossPrice: process.env.STOP_LOSS_PRICE
         ? Number(process.env.STOP_LOSS_PRICE)
-        : undefined,
+        : 55800,
       takeProfitPrice: process.env.TAKE_PROFIT_PRICE
         ? Number(process.env.TAKE_PROFIT_PRICE)
-        : undefined,
+        : 72000,
       pollIntervalMs: Number(process.env.POLL_INTERVAL_MS ?? 5000),
       dryRun: overrides?.dryRun ?? process.env.DRY_RUN === "true",
     },

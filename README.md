@@ -106,10 +106,10 @@ $$
 The exponent uses **\(n-1\)**, matching `buildGridLevels` — not \(n\). Adjacent spacing is constant in percent:
 
 $$
-\text{gross\_step} = \frac{P_{i+1}}{P_i} - 1 = \left(\frac{P_U}{P_L}\right)^{1/(n-1)} - 1
+\text{gross step} = \frac{P_{i+1}}{P_i} - 1 = \left(\frac{P_U}{P_L}\right)^{1/(n-1)} - 1
 $$
 
-On the shipped \(57{,}500\)–\(69{,}800\) / **8**-level book, geometric mid \(\sqrt{P_L P_U} \approx 63{,}352\) (inside a ~$63.3k print) and adjacent spacing is about **2.81%**.
+On the shipped \(57{,}500\)–\(69{,}800\) / **8**-level book, geometric mid \(\sqrt{P_L P_U} \approx 63{,}352\) (inside a ~\$63.3k print) and adjacent spacing is about **2.81%**.
 
 ### Deploy split
 
@@ -140,7 +140,7 @@ $$
 Shipped README model: \(f = 8\), \(s = 3\) → **\(c = 22\) bps**. Net on notional \(N = q \cdot P\):
 
 $$
-\Pi_{\text{net}} \approx N \cdot (\text{gross\_step} - c)
+\Pi_{\text{net}} \approx N \cdot (\text{gross step} - c)
 $$
 
 **Constraint:** `gross_step` **must be several times** \(c\). On the shipped geometric book, 2.81% / 0.22% ≈ **12.8×**. Pack `GRID_LEVELS` toward 20 on the same band and the step collapses toward ~1% — still above 22 bps on paper, but a modest trend now loads **many** rungs on one side. That is how “more levels” looks busy and still loses.
@@ -150,7 +150,7 @@ $$
 A clean up-and-back is positive iff:
 
 $$
-\text{gross\_step} > c
+\text{gross step} > c
 $$
 
 At 22 bps drag you need **> 0.22%** just to break even before inventory mark-to-market. A professional desk wants several times that — which is why shipped defaults use **8** rungs, not 20.
@@ -159,59 +159,59 @@ At 22 bps drag you need **> 0.22%** just to break even before inventory mark-to-
 
 Buy-side quote on deploy is \(\sum_i q \cdot P_i\) over rungs with \(P_i < P_{\text{last}}\). `MAX_QUOTE_EXPOSURE` refuses the next buy if projected quote would exceed the cap. Size and exposure **must move together**: raise `GRID_ORDER_SIZE` without raising the cap and the risk manager blocks every buy.
 
-On the shipped 0.012 BTC / 8-rung book around $63.3k: ~**$2.9k** initial buys, ~**$5.3k** if price walks every buy except the top. Cap **6500** covers that walk without instantly blocking the ladder, and still leaves a starter-desk ceiling vs a $10k book.
+On the shipped 0.012 BTC / 8-rung book around \$63.3k: ~**\$2.9k** initial buys, ~**\$5.3k** if price walks every buy except the top. Cap **6500** covers that walk without instantly blocking the ladder, and still leaves a starter-desk ceiling vs a \$10k book.
 
 ---
 
 ## Statistical analysis
 
-Results depend on settings, market regime, and how you tune. There is **no guaranteed profit**. Figures below are **ILLUSTRATIVE scenario math** built from the grid identities above (geometric/arithmetic spacing vs the 8+3 bps cost model, clip size, SL/TP shutdown behavior) on a **$10,000 MEXC BTCUSDT** book. They are **not** a historical backtest and **not** a promise.
+Results depend on settings, market regime, and how you tune. There is **no guaranteed profit**. Figures below are **ILLUSTRATIVE scenario math** built from the grid identities above (geometric/arithmetic spacing vs the 8+3 bps cost model, clip size, SL/TP shutdown behavior) on a **\$10,000 MEXC BTCUSDT** book. They are **not** a historical backtest and **not** a promise.
 
 ### 1) Optimized / hunt scenario (illustrative) — lead
 
-**Assumptions:** band fitted around live BTC (`59500`–`67500`), **geometric**, **8** levels, `GRID_ORDER_SIZE` **0.016** (~$1,013/clip), `MAX_QUOTE_EXPOSURE` **8000**, `STOP_LOSS_PRICE` **58000**, `TAKE_PROFIT_PRICE` **69500**, two-sided BTCUSDT conditions. Gross step ≈ **1.82%** (~**8.3×** the 22 bps cost model). Net cycle on a clean rung ≈ **$16.20**.
+**Assumptions:** band fitted around live BTC (`59500`–`67500`), **geometric**, **8** levels, `GRID_ORDER_SIZE` **0.016** (~\$1,013/clip), `MAX_QUOTE_EXPOSURE` **8000**, `STOP_LOSS_PRICE` **58000**, `TAKE_PROFIT_PRICE` **69500**, two-sided BTCUSDT conditions. Gross step ≈ **1.82%** (~**8.3×** the 22 bps cost model). Net cycle on a clean rung ≈ **\$16.20**.
 
 | Metric | Tuned scenario | What it means | Why a trader cares |
 |---|---:|---|---|
 | Sample | **84 fills** | Selective 8-rung ladder, not a 20-rung churn bot | Enough to see process; still one regime sample |
 | Win rate | **61.9%** | More than half the clips work | At ~1.7 payoff you do **not** need 80% wins |
 | Loss rate | **38.1%** | Losses are planned, not surprises | SL/TP shutdown exists for the trend sleeve |
-| Avg win / avg loss | **$26.40 / $15.20** | Winners about 1.7× losers after costs | Spacing minus 22 bps, not a secret oscillator |
+| Avg win / avg loss | **\$26.40 / \$15.20** | Winners about 1.7× losers after costs | Spacing minus 22 bps, not a secret oscillator |
 | Payoff ratio | **1.74** | Avg win ÷ avg loss | Above ~1.6, a 60% win rate becomes compelling |
-| Expectancy / trade | **+$10.55** | Average dollar outcome per fill | Positive EV is the only reason to raise clip size |
-| Net PnL / ROI | **+$886 / +8.9%** | Book after the sample | What you feel in equity — still scenario, still regime-dependent |
+| Expectancy / trade | **+\$10.55** | Average dollar outcome per fill | Positive EV is the only reason to raise clip size |
+| Net PnL / ROI | **+\$886 / +8.9%** | Book after the sample | What you feel in equity — still scenario, still regime-dependent |
 | Profit factor | **2.82** | Gross wins ÷ gross losses | >2 is a desk you *want* to keep tuning |
 | Max drawdown | **3.9%** | Worst peak-to-trough in the sample | SL fired before inventory became a directional bet |
 | Return / risk | **~1.8** | Return vs path volatility (Sharpe-like) | Smooth enough to sit through; not a lottery ticket |
-| Best / worst trade | **+$54 / −$20** | Tail of the grid distribution | Worst should look like a clipped loser, not a blow-up |
+| Best / worst trade | **+\$54 / −\$20** | Tail of the grid distribution | Worst should look like a clipped loser, not a blow-up |
 | Max win / loss streak | **8 / 4** | Clustering | Four losses in a row is why the price-band halt exists |
 | Mix | **~100% grid** | Ladder did the work | No DCA overlay on this bot |
 
 **Plain English:** a band that actually contains BTC, eight rungs, clips large enough that 22 bps is not the whole story, and an SL/TP that actually fires produces *cleaner* round-trips. That is the profile worth hunting. Your live numbers will move with MEXC volatility, whether fills stay maker, and how hard you push `GRID_ORDER_SIZE`.
 
 ```text
-TUNED SCENARIO (illustrative)     $10k book · 84 fills
-Win rate  61.9%   Payoff  1.74   EV/trade  +$10.55
+TUNED SCENARIO (illustrative)     \$10k book · 84 fills
+Win rate  61.9%   Payoff  1.74   EV/trade  +\$10.55
 ROI       +8.9%   PF      2.82   Max DD     3.9%
 ```
 
 ### 2) Untuned / old-default contrast (illustrative)
 
-Old shipped-like: band `60000`–`70000`, **arithmetic**, **10** levels, `GRID_ORDER_SIZE` **0.001** (~$63/clip), `MAX_QUOTE_EXPOSURE` **500**, **no SL/TP**. Same venue, same engine — stale-ish dollar ladder, dust clips, no trend brake.
+Old shipped-like: band `60000`–`70000`, **arithmetic**, **10** levels, `GRID_ORDER_SIZE` **0.001** (~\$63/clip), `MAX_QUOTE_EXPOSURE` **500**, **no SL/TP**. Same venue, same engine — stale-ish dollar ladder, dust clips, no trend brake.
 
 | Metric | Old default-like | vs tuned |
 |---|---:|---|
 | Sample | 118 fills, tiny clips | Busier, lower quality |
 | Win rate | 53.4% | Mean-reversion still happens; fees and inventory eat R |
-| Payoff | 1.14 | $63 clips + 22 bps flatten the cycle (~$0.97 net on a clean step) |
-| Expectancy | ~+$0.23 | Starter EV — survivable, not a desk |
-| ROI | ~+0.3% | A $10k book barely moves; the $500 cap is the real size |
+| Payoff | 1.14 | \$63 clips + 22 bps flatten the cycle (~\$0.97 net on a clean step) |
+| Expectancy | ~+\$0.23 | Starter EV — survivable, not a desk |
+| ROI | ~+0.3% | A \$10k book barely moves; the \$500 cap is the real size |
 | Profit factor | 1.31 | Easy to lose after a trend week with no SL |
 | Max drawdown | 7.4% | No price-band shutdown; inventory walks |
 
-**Takeaway:** the old 60–70k / 10-rung / 0.001 BTC / $500 book is a **toy on-ramp**, not the performance target. The jump from ~1.3 profit factor to ~2.8 in the tuned block is mostly **fitted band + geometric 8 levels + clips that clear fees + SL/TP on** — not a different bot.
+**Takeaway:** the old 60–70k / 10-rung / 0.001 BTC / \$500 book is a **toy on-ramp**, not the performance target. The jump from ~1.3 profit factor to ~2.8 in the tuned block is mostly **fitted band + geometric 8 levels + clips that clear fees + SL/TP on** — not a different bot.
 
-Shipped `.env.example` is now the **conservative on-ramp** (fitted geometric 8-rung, ~$760 clips, SL/TP on). Copy the hunt block below when you want the **tuned** profile from this section.
+Shipped `.env.example` is now the **conservative on-ramp** (fitted geometric 8-rung, ~\$760 clips, SL/TP on). Copy the hunt block below when you want the **tuned** profile from this section.
 
 ### Regime sketch (tuned scenario)
 
@@ -378,7 +378,7 @@ Every row maps 1:1 to an env var (Zod-validated on boot). Strategy knobs shape t
 | Parameter | Default | Meaning | Why it matters | Typical working range |
 |---|---|---|---|---|
 | `MEXC_SYMBOL` | `BTCUSDT` | Spot pair (`BTC-USDT` accepted) | Stay on liquid majors | BTC/ETH USDT |
-| `GRID_MODE` | `geometric` | `geometric` or `arithmetic` | Equal-% vs equal-$ rungs — **#1 cycle-uniformity knob** | geometric on BTC |
+| `GRID_MODE` | `geometric` | `geometric` or `arithmetic` | Equal-% vs equal-\$ rungs — **#1 cycle-uniformity knob** | geometric on BTC |
 | `GRID_LOWER_PRICE` | `57500` | Grid floor | Band vs live last — **#1 ROI / DD knob** | fit to recent range |
 | `GRID_UPPER_PRICE` | `69800` | Grid ceiling | Both sides must contain spot | fit to recent range |
 | `GRID_LEVELS` | `8` | Number of rungs | Density vs spacing vs fees | 6 – 10 |
@@ -393,7 +393,7 @@ Every row maps 1:1 to an env var (Zod-validated on boot). Strategy knobs shape t
 
 ### Tuned-parameter example (hunt set — starting point, not a certificate)
 
-Shipped `.env.example` is the **conservative on-ramp** (wider 57.5k–69.8k band, 0.012 BTC, $6.5k cap). Copy this block when you are ready to search for the **tuned** profile from the Statistical Analysis section. Re-fit the band to the BTC range you actually have — these two numbers are illustrative bounds around a ~$63.3k print, not a forever band.
+Shipped `.env.example` is the **conservative on-ramp** (wider 57.5k–69.8k band, 0.012 BTC, \$6.5k cap). Copy this block when you are ready to search for the **tuned** profile from the Statistical Analysis section. Re-fit the band to the BTC range you actually have — these two numbers are illustrative bounds around a ~\$63.3k print, not a forever band.
 
 ```bash
 MEXC_SYMBOL=BTCUSDT
@@ -408,15 +408,15 @@ TAKE_PROFIT_PRICE=69500
 POLL_INTERVAL_MS=4000
 ```
 
-Tighter band → more fills, still **~1.82%** gross step (**~8.3×** the 22 bps model). Higher clip → EV/trade worth the operational risk. Exposure **8000** covers the ~$7.0k buy-side walk on that ladder.
+Tighter band → more fills, still **~1.82%** gross step (**~8.3×** the 22 bps model). Higher clip → EV/trade worth the operational risk. Exposure **8000** covers the ~\$7.0k buy-side walk on that ladder.
 
 ---
 
 ## Example trade walkthrough
 
-**Setup.** MEXC `BTCUSDT` spot, $10,000 illustrative book, hunt-style band `59500`–`67500`, **8** geometric levels, `GRID_ORDER_SIZE` `0.016`, `MAX_QUOTE_EXPOSURE` `8000`, SL `58000` / TP `69500`. Last ≈ **$63,324**. Geometric mid ≈ **$63,374**.
+**Setup.** MEXC `BTCUSDT` spot, \$10,000 illustrative book, hunt-style band `59500`–`67500`, **8** geometric levels, `GRID_ORDER_SIZE` `0.016`, `MAX_QUOTE_EXPOSURE` `8000`, SL `58000` / TP `69500`. Last ≈ **\$63,324**. Geometric mid ≈ **\$63,374**.
 
-**Deploy.** Rungs below last rest as **BUY** (59,500 … 62,805). Rungs above rest as **SELL** (63,948 … 67,500). Four buys, four sells. Initial buy-side quote ≈ **$3.9k** — under the cap.
+**Deploy.** Rungs below last rest as **BUY** (59,500 … 62,805). Rungs above rest as **SELL** (63,948 … 67,500). Four buys, four sells. Initial buy-side quote ≈ **\$3.9k** — under the cap.
 
 **Harvest.** Last prints down through **62,805**. That buy fills. Engine places a **SELL one level up** at **63,948**. Gross step ≈ 1.82%; minus 22 bps is the intended cycle. `simulate` would have shown the gross quote/cycle from `estimateGridProfitPerCycle`.
 

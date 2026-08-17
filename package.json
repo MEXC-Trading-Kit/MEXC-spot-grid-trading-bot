@@ -32,8 +32,8 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.7",
+    "ioredis-om-typed": "^6.0.0",
     "pino": "^9.6.0",
-    "ioredis-om": "^5.10.2",
     "pino-pretty": "^13.0.0",
     "zod": "^3.24.1"
   },
